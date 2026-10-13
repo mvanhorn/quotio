@@ -520,7 +520,9 @@ private struct AccountQuotaCardV2: View {
             .sheet(isPresented: $showModelsDetailSheet) {
                 AntigravityModelsDetailSheet(
                     email: account.email,
-                    models: data.models
+                    models: data.models,
+                    displayMode: settings.quotaDisplayMode,
+                    hideSensitiveInfo: settings.hideSensitiveInfo
                 )
             }
         }
@@ -820,13 +822,13 @@ private struct StandardLowestBarLayout: View {
     }
 }
 
-private struct AntigravityModelsDetailSheet: View {
+struct AntigravityModelsDetailSheet: View {
     let email: String
     let models: [QuotaMetric]
+    let displayMode: QuotaDisplayMode
+    let hideSensitiveInfo: Bool
 
     @Environment(\.dismiss) private var dismiss
-
-    @Environment(MenuBarSettingsManager.self) private var settings
 
     private var sortedModels: [QuotaMetric] {
         models.sorted { $0.name < $1.name }
@@ -846,7 +848,7 @@ private struct AntigravityModelsDetailSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("quota.allModels".localized())
                         .font(.headline)
-                    SensitiveAccountText(value: email, isSensitive: settings.hideSensitiveInfo)
+                    SensitiveAccountText(value: email, isSensitive: hideSensitiveInfo)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -875,7 +877,7 @@ private struct AntigravityModelsDetailSheet: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(sortedModels) { model in
-                        ModelDetailCard(model: model)
+                        ModelDetailCard(model: model, displayMode: displayMode)
                     }
                 }
                 .padding()
@@ -891,10 +893,10 @@ private struct AntigravityModelsDetailSheet: View {
 
 private struct ModelDetailCard: View {
     let model: QuotaMetric
+    let displayMode: QuotaDisplayMode
 
-    @Environment(MenuBarSettingsManager.self) private var settings
     private var displayHelper: QuotaDisplayHelper {
-        QuotaDisplayHelper(displayMode: settings.quotaDisplayMode)
+        QuotaDisplayHelper(displayMode: displayMode)
     }
 
     private var remainingPercent: Double {
